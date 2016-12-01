@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        android_gradle_ver = '2.2.0' // was 1.5.0
+        android_gradle_ver = '2.2.0' // seems to work '2.2.0' // was 1.5.0
 
         build = [
                 android_gradle: "com.android.tools.build:gradle:${android_gradle_ver}"

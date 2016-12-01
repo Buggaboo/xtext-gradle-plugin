@@ -38,10 +38,6 @@ class XtextAndroidBuilderPlugin implements Plugin<Project> {
 	private def configureAndroid() {
 		project.afterEvaluate[
 			android = project.extensions.getByName("android") as BaseExtension
-			android.packagingOptions [
-				exclude('META-INF/ECLIPSE_.RSA')
-				exclude('META-INF/ECLIPSE_.SF')
-			]
 			variants = switch android {
 				AppExtension: android.applicationVariants as DomainObjectSet<? extends BaseVariant>
 				LibraryExtension: android.libraryVariants
@@ -50,6 +46,8 @@ class XtextAndroidBuilderPlugin implements Plugin<Project> {
 			configureOutletDefaults
 			configureGeneratorDefaults
 			configureSourceSetDefaults
+
+			android.packagingOptions.excludes += 'META-INF/ECLIPSE_.*'
 		]
 	}
 
@@ -84,8 +82,8 @@ class XtextAndroidBuilderPlugin implements Plugin<Project> {
 			sourceDirs += variant.outputs.map[processResources.sourceOutputDir]					
 			sourceSet.srcDirs(sourceDirs)
 			generatorTask.bootClasspath = android.bootClasspath.join(File.pathSeparator)
-			generatorTask.classpath = variant.javaCompiler.classpath.plus(project.files(android.bootClasspath))
-			generatorTask.classesDir = variant.javaCompiler.destinationDir
+			generatorTask.classpath = variant.javaCompile.classpath.plus(project.files(android.bootClasspath))
+			generatorTask.classesDir = variant.javaCompile.destinationDir
 			generatorTask.options.encoding = android.compileOptions.encoding
 			variant.registerJavaGeneratingTask(generatorTask, generatorTask.outputDirectories)
 		]
