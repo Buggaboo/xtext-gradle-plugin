@@ -1,78 +1,101 @@
 buildscript {
-  repositories {
-    jcenter()
-  }
-  dependencies {
-    classpath 'org.xtend:xtend-gradle-plugin:0.4.14'
-    classpath 'com.github.oehme.sobula:sobula:0.6.6'
-    classpath "com.netflix.nebula:nebula-project-plugin:2.2.1"
-  }
+    ext {
+        android_gradle_ver = '2.2.0' // was 1.5.0
+
+        build = [
+                android_gradle: "com.android.tools.build:gradle:${android_gradle_ver}"
+        ]
+
+        guava_ver = '18.0' // was 18.0 // 19.0 + 20.0 breaks due to deprecated stuff
+        xtend_lib_ver = '2.9.0' // was 2.9.0 // unsure whether 2.10 is also broken
+        xtext_ver = '2.9.0' // was 2.9.0 // unsure whether 2.10 is broken
+        eclipse_core_runtime_ver = '3.7.0' // '3.9.0.v20130326-1255' breaks everything // was 3.7.0
+
+        lib = [
+                guava : "com.google.guava:guava:${guava_ver}",
+                xtend : "org.eclipse.xtend:org.eclipse.xtend.lib:${xtend_lib_ver}",
+                xtext : [
+                        xtext: "org.eclipse.xtext:org.eclipse.xtext:${xtext_ver}",
+                        java : "org.eclipse.xtext:org.eclipse.xtext.java:${xtext_ver}",
+                        xbase: "org.eclipse.xtext:org.eclipse.xtext.xbase:${xtext_ver}"
+                ],
+                eclipse_core: "org.eclipse.core:org.eclipse.core.runtime:${eclipse_core_runtime_ver}"
+        ]
+    }
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.xtend:xtend-gradle-plugin:0.4.14'
+        classpath 'com.github.oehme.sobula:sobula:0.6.6'
+        classpath "com.netflix.nebula:nebula-project-plugin:2.2.1"
+    }
 }
 
 allprojects {
-  apply plugin: 'com.github.oehme.sobula.plugin-release'
+    apply plugin: 'com.github.oehme.sobula.plugin-release'
 
-  group = "org.xtext"
-  bintray.pkg.name = "$rootProject.group:$rootProject.name"
+    group = "org.xtext"
+    bintray.pkg.name = "$rootProject.group:$rootProject.name"
 
-  contacts {
-    "xtext.team@gmail.com" {
-      moniker "The Xtext team"
-      roles "owner"
-      github "xtext"
+    contacts {
+        "xtext.team@gmail.com" {
+            moniker "The Xtext team"
+            roles "owner"
+            github "xtext"
+        }
     }
-  }
 
-  bintray.user = "xtext-team"
-  bintray.pkg.version.mavenCentralSync.user = "xtext.team"
+    bintray.user = "xtext-team"
+    bintray.pkg.version.mavenCentralSync.user = "xtext.team"
 
-  repositories {
-    jcenter()
-  }
+    repositories {
+        jcenter()
+    }
 }
 
 subprojects {
-  apply plugin: 'eclipse'
-  apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'java'
 
-  sourceCompatibility = 1.6
+    sourceCompatibility = 1.6
 
-  tasks.withType(JavaCompile) {
-      options.encoding = 'UTF-8'
-  }
-
-  dependencies {
-    compile gradleApi()
-    compile 'com.google.guava:guava:18.0'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.ow2.asm:asm:5.0.1'
-  }
-}
-
-configure(subprojects.findAll{p-> !p.name.contains('protocol')}) {
-  apply plugin: 'org.xtend.xtend'
-
-  dependencies {
-    compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.0'
-  }
-}
-
-configure(subprojects.findAll{p-> p.name.contains('plugin')}){
-  apply plugin: 'java-gradle-plugin'
-  apply plugin: "nebula.nebula-integtest"
-
-  jar {
-    manifest {
-      attributes("Implementation-Version": project.version)
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
     }
-  }
 
-  dependencies {
-    integTestCompile gradleTestKit()
-  }
+    dependencies {
+        compile gradleApi()
+        compile(project.properties.lib.guava) // 'com.google.guava:guava:18.0'
+        testCompile 'junit:junit:4.12'
+        testCompile 'org.ow2.asm:asm:5.0.1'
+    }
+}
 
-  integrationTest {
-    dependsOn("install")
-    systemProperty 'gradle.project.version', version
-  }
+configure(subprojects.findAll { p -> !p.name.contains('protocol') }) {
+    apply plugin: 'org.xtend.xtend'
+
+    dependencies {
+        compile(project.properties.lib.xtend) // 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.0'
+    }
+}
+
+configure(subprojects.findAll { p -> p.name.contains('plugin') }) {
+    apply plugin: 'java-gradle-plugin'
+    apply plugin: "nebula.nebula-integtest"
+
+    jar {
+        manifest {
+            attributes("Implementation-Version": project.version)
+        }
+    }
+
+    dependencies {
+        integTestCompile gradleTestKit()
+    }
+
+    integrationTest {
+        dependsOn("install")
+        systemProperty 'gradle.project.version', version
+    }
 }
